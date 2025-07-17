@@ -33,12 +33,13 @@ numapprox:-pade(exp(x),x,[2,2]);
 ## pade近似を関数化(式を関数化する方法)
 
 研究では指数関数のPade近似を多用しています。<br>
-そのため指数の肩`x`とPade近似の次数`[m,n]`を入力すれば、それに応じた指数関数のPade近似が出力されるような関数を作りたいです。<br>
+そのため指数の肩`x`とPade近似の次数`[m,n]`を入力すれば、それに応じた指数関数のPade近似が出力されるような関数(このような複雑な関数のことをMapleではプロシージャといいます)を作りたいです。<br>
 次のようにするとよいです。<br>
-
+式の関数化とプロシージャの定義：
 ```maple
 pade_exp := proc(xval, l1, l2)
   local x, tmpFunc;
+　# 式pade()を関数化
   tmpFunc := unapply(pade(exp(x), x, [l1, l2]), x);
   return tmpFunc(xval);
 end proc
@@ -59,13 +60,13 @@ end proc
 
 続いて、Pade近似を用いて三角関数の近似関数を作ります。`sin(x) = (e^(ix) - e^(-ix)/2i)`の指数関数をパデ近似に置き換えます。<br>
 三角関数を直接パデ近似すれば良いのでは？と無駄な操作に思えるかもしれませんが、これが研究に必要でした。<br>
-
+指数関数のパデ近似を用いた三角関数の近似を出力するプロシージャ：
 ```maple
 sin_by_padeExp := proc(xval, l1, l2)
-  local x, tmpFunc;
-  tmpFunc := unapply(simplify(-1/2*I*(pade_exp(x*I, l1, l2) - pade_exp(-I*x, l1, l2))));
-  return tmpFunc(xval);
-end proc
+  local x, sinapprox;
+  sinapprox := unapply(simplify(-1/2*I*(pade_exp(x*I, l1, l2) - pade_exp(-I*x, l1, l2))));
+  return sinapprox(xval);
+  end proc
 ```
 
 基本的な構造(関数化したのちに代入)は先ほどと同様です。<br>
@@ -75,4 +76,49 @@ end proc
 
 
 ## 関数の保存と読み込み
-モジュール化とライブラリ化との違いについてもまとめる。
+自分で制作した関数は、`save` コマンドを使って関数を `.m` ファイルに保存し、必要なときに `read` コマンドで読み込むことで他のドキュメントでも使用することができます。
+MATLABを使っている人は拡張子`.m`だとMATLABのコードと認識されてしまうので拡張子`.mpl`にすればOKです。
+
+関数(プロシージャ)の保存方法：
+```maple
+# 関数(プロシージャ)の定義
+pade_exp := proc(xval, l1, l2)
+  local x, tmpFunc;
+  tmpFunc := unapply(pade(exp(x), x, [l1, l2]), x);
+  return tmpFunc(xval);
+end proc
+
+# 関数の保存
+save pade_exp, "C:\\Users\\あなたの名前\\Documents\\proc_pade_exp.mpl"
+```
+
+
+関数の読み込み：
+```maple
+read "C:\\Users\\あなたの名前\\Documents\\proc_pade_exp.mpl"
+```
+
+ユーザーマニュアルには`"ファイルの名前.mpl"`だけで保存できるとありましたが、私はエラーが出ました。調べたところ上のコードのように完全なパスを指定した方が確実です。
+パスを指定する場合`/`ではなく`\\`であることに注意してください。
+また複数の関数を保存することも可能です。
+
+複数の関数を保存：
+```maple
+# 関数の定義
+pade_exp := proc(xval, l1, l2)
+  local x, tmpFunc;
+  tmpFunc := unapply(pade(exp(x), x, [l1, l2]), x);
+  return tmpFunc(xval);
+end proc
+
+sin_by_padeExp := proc(xval, l1, l2)
+  local x, tmpFunc;
+  tmpFunc := unapply(simplify(-1/2*I*(pade_exp(x*I, l1, l2) - pade_exp(-I*x, l1, l2))));
+  return tmpFunc(xval);
+end proc
+
+# 関数の保存
+save pade_exp,sin_by_padeExp, "C:\\Users\\あなたの名前\\Documents\\proc_pade_exp.mpl"
+```
+
+関数名の後に必ず`,`をつけるのを忘れないようにしましょう。
