@@ -23,7 +23,7 @@ with(numapprox);
 pade(exp(x),x,[2,2]);
 ```
 
-パッケージの関数をバインドしない場合：
+パッケージを読み込まない場合：
 ```maple
 numapprox:-pade(exp(x),x,[2,2]);
 ```
